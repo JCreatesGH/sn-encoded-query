@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="380" viewBox="0 0 800 380" font-family="SFMono-Regular,Consolas,Menlo,monospace">
+  <rect width="800" height="380" rx="10" fill="#1e1e2e"/>
+  <text x="24" y="36" font-size="17" font-weight="700" fill="#cdd6f4" font-family="system-ui,sans-serif">sn-encoded-query</text>
+  <text x="230" y="36" font-size="13" fill="#6c7086" font-family="system-ui,sans-serif">type-safe ServiceNow encoded queries</text>
+  <text font-size="13" xml:space="preserve">
+    <tspan x="24" y="74" fill="#89b4fa">query</tspan><tspan fill="#cdd6f4">()</tspan>
+    <tspan x="40" y="94" fill="#cdd6f4">.</tspan><tspan fill="#89dceb">where</tspan><tspan fill="#cdd6f4">(</tspan><tspan fill="#a6e3a1">"active"</tspan><tspan fill="#cdd6f4">, </tspan><tspan fill="#a6e3a1">"eq"</tspan><tspan fill="#cdd6f4">, </tspan><tspan fill="#fab387">true</tspan><tspan fill="#cdd6f4">)</tspan>
+    <tspan x="40" y="114" fill="#cdd6f4">.</tspan><tspan fill="#89dceb">and</tspan><tspan fill="#cdd6f4">(</tspan><tspan fill="#a6e3a1">"priority"</tspan><tspan fill="#cdd6f4">, </tspan><tspan fill="#a6e3a1">"lte"</tspan><tspan fill="#cdd6f4">, </tspan><tspan fill="#fab387">2</tspan><tspan fill="#cdd6f4">)</tspan>
+    <tspan x="40" y="134" fill="#cdd6f4">.</tspan><tspan fill="#89dceb">or</tspan><tspan fill="#cdd6f4">(</tspan><tspan fill="#a6e3a1">"assigned_to"</tspan><tspan fill="#cdd6f4">, </tspan><tspan fill="#a6e3a1">"isEmpty"</tspan><tspan fill="#cdd6f4">)</tspan>
+    <tspan x="40" y="154" fill="#cdd6f4">.</tspan><tspan fill="#89dceb">orderByDesc</tspan><tspan fill="#cdd6f4">(</tspan><tspan fill="#a6e3a1">"sys_created_on"</tspan><tspan fill="#cdd6f4">)</tspan>
+    <tspan x="40" y="174" fill="#cdd6f4">.</tspan><tspan fill="#89dceb">build</tspan><tspan fill="#cdd6f4">()</tspan>
+  </text>
+  <rect x="24" y="192" width="752" height="40" rx="8" fill="#11111b"/>
+  <text x="38" y="217" font-size="13" fill="#a6e3a1">active=true^priority&lt;=2^ORassigned_toISEMPTY^ORDERBYDESCsys_created_on</text>
+  <rect x="24" y="248" width="752" height="92" rx="8" fill="#181825"/>
+  <text font-size="12.5" xml:space="preserve">
+    <tspan x="38" y="274" fill="#6c7086"># validate against the table schema:</tspan>
+    <tspan x="38" y="296" fill="#cdd6f4">validate("active=true^bogus_field=1", fields)</tspan>
+    <tspan x="38" y="318" fill="#f38ba8">  HIGH unknown-field: Field 'bogus_field' is not in the table schema.</tspan>
+  </text>
+  <text x="24" y="362" font-size="12" fill="#a6e3a1">✓ 11 tests · builder · parser (round-trips ≥ &gt;= IN ISEMPTY OR ORDERBY) · validator</text>
+</svg>
