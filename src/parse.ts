@@ -8,10 +8,17 @@ export interface ParsedCondition {
   join: "AND" | "OR";
 }
 
-// longest tokens first so ">=" beats ">"
-const TOKENS: Array<[OperatorName, string]> = (Object.entries(OPERATORS) as Array<[OperatorName, string]>)
-  .sort((a, b) => b[1].length - a[1].length);
+// Binary operators (those with a value); matched by *position*, not just length,
+// so an operator substring inside a value (e.g. the "IN" in "state=INPROGRESS")
+// can't beat the real, earlier operator.
+const BINARY: Array<[OperatorName, string]> = (Object.entries(OPERATORS) as Array<[OperatorName, string]>)
+  .filter(([name]) => name !== "isEmpty" && name !== "isNotEmpty");
 
+// Longest unary suffix first (ISNOTEMPTY before ISEMPTY).
+const UNARY_TOKENS: Array<[OperatorName, string]> = [
+  ["isNotEmpty", OPERATORS.isNotEmpty],
+  ["isEmpty", OPERATORS.isEmpty],
+];
 
 export function parseQuery(encoded: string): ParsedCondition[] {
   const out: ParsedCondition[] = [];
@@ -21,23 +28,29 @@ export function parseQuery(encoded: string): ParsedCondition[] {
     let join: "AND" | "OR" = "AND";
     let seg = segment;
     if (seg.startsWith("OR")) { join = "OR"; seg = seg.slice(2); }
-    let matched = false;
-    for (const [name, token] of TOKENS) {
-      // unary tokens are suffixes (field + ISEMPTY)
-      if ((name === "isEmpty" || name === "isNotEmpty")) {
-        if (seg.endsWith(token)) {
-          out.push({ field: seg.slice(0, -token.length), op: name, token, value: "", join });
-          matched = true; break;
-        }
-        continue;
-      }
+
+    // value-less suffix operators (field + ISEMPTY / ISNOTEMPTY)
+    const unary = UNARY_TOKENS.find(([, t]) => seg.endsWith(t) && seg.length > t.length);
+    if (unary) {
+      out.push({ field: seg.slice(0, -unary[1].length), op: unary[0], token: unary[1], value: "", join });
+      continue;
+    }
+
+    // The operator that starts earliest delimits field from value; on a tie the
+    // longest token wins (so ">=" beats ">", "!=" beats "=").
+    let best: { name: OperatorName; token: string; idx: number } | null = null;
+    for (const [name, token] of BINARY) {
       const idx = seg.indexOf(token);
-      if (idx > 0) {
-        out.push({ field: seg.slice(0, idx), op: name, token, value: seg.slice(idx + token.length), join });
-        matched = true; break;
+      if (idx > 0 && (best === null || idx < best.idx || (idx === best.idx && token.length > best.token.length))) {
+        best = { name, token, idx };
       }
     }
-    if (!matched) out.push({ field: seg, op: "unknown", token: "", value: "", join });
+    if (best) {
+      out.push({ field: seg.slice(0, best.idx), op: best.name, token: best.token,
+                 value: seg.slice(best.idx + best.token.length), join });
+    } else {
+      out.push({ field: seg, op: "unknown", token: "", value: "", join });
+    }
   }
   return out;
 }

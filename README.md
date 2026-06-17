@@ -41,12 +41,21 @@ validate("active=true^bogus_field=1", new Set(["active", "priority"]));
 // [{ severity: "high", rule: "unknown-field", message: "Field 'bogus_field' is not in the table schema." }]
 ```
 
-The validator catches unknown fields (when given a schema), unparseable operators, and empty `field=` values that should be `isEmpty` checks.
+The validator catches unknown fields (when given a schema), unparseable operators, and empty `field=` values that should be `isEmpty` checks. The parser binds each condition to the **earliest** operator, so a value that contains operator text (e.g. `state=INPROGRESS`, `descriptionLIKEa=b`) parses correctly instead of splitting on the `IN`/`=` inside the value.
+
+## CLI
+
+Installing the package adds an `sn-encoded-query` command — parse and validate a query string (exits 1 on a HIGH issue):
+
+```bash
+$ sn-encoded-query "active=true^priority>=2^ORstate=6"
+$ sn-encoded-query "state=INPROGRESS^assigned_toISEMPTY" --json
+```
 
 ## Development
 
 ```bash
-npm install && npm test    # 11 tests
+npm install && npm test    # 15 tests
 npm run build              # tsc, clean
 ```
 

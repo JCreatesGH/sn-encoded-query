@@ -1,6 +1,7 @@
 import { describe, it, expect } from "vitest";
 import { parseQuery } from "./parse";
 import { validate } from "./validate";
+import { run } from "./cli";
 
 describe("parseQuery", () => {
   it("round-trips operators including >= and OR", () => {
@@ -13,6 +14,37 @@ describe("parseQuery", () => {
 
   it("ignores ORDERBY segments", () => {
     expect(parseQuery("active=true^ORDERBYDESCsys_created_on")).toHaveLength(1);
+  });
+
+  it("binds to the earliest operator, not an operator substring in the value", () => {
+    // the "IN" inside "INPROGRESS" must not beat the real "=" operator
+    expect(parseQuery("state=INPROGRESS")[0]).toMatchObject({ field: "state", op: "eq", value: "INPROGRESS" });
+    // "=" inside a LIKE value stays part of the value
+    expect(parseQuery("short_descriptionLIKEa=b")[0])
+      .toMatchObject({ field: "short_description", op: "contains", value: "a=b" });
+    // != beats the = inside it
+    expect(parseQuery("priority!=2")[0]).toMatchObject({ field: "priority", op: "ne", value: "2" });
+  });
+});
+
+describe("cli run()", () => {
+  it("prints help with no args (exit 1)", () => {
+    const r = run([]);
+    expect(r.code).toBe(1);
+    expect(r.output).toContain("Usage:");
+  });
+
+  it("parses + validates and exits 0 for a clean query", () => {
+    const r = run(["active=true^priority>=2"]);
+    expect(r.code).toBe(0);
+    expect(r.output).toContain("no issues");
+  });
+
+  it("exits 1 with --json when an operator can't be parsed", () => {
+    const r = run(["just_a_field_no_operator", "--json"]);
+    expect(r.code).toBe(1);
+    const data = JSON.parse(r.output);
+    expect(data.issues.some((i: any) => i.rule === "bad-operator")).toBe(true);
   });
 });
 
