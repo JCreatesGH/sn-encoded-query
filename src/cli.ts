@@ -1,13 +1,15 @@
 #!/usr/bin/env node
 import { parseQuery } from "./parse.js";
 import { validate } from "./validate.js";
+import { humanize } from "./humanize.js";
 
-const HELP = `sn-encoded-query — parse & validate a ServiceNow encoded query
+const HELP = `sn-encoded-query — parse, explain & validate a ServiceNow encoded query
 
 Usage:
-  sn-encoded-query "<encoded query>" [--json]
+  sn-encoded-query "<encoded query>" [--json] [--explain]
 
 Options:
+  --explain     print the query as a plain-English sentence
   --json        emit parsed conditions + issues as JSON
   -h, --help    show this help
 
@@ -19,7 +21,9 @@ export function run(args: string[]): { code: number; output: string } {
   if (args.includes("-h") || args.includes("--help")) return { code: 0, output: HELP };
 
   const json = args.includes("--json");
-  const encoded = args.filter((a) => a !== "--json").join(" ");
+  const explain = args.includes("--explain");
+  const encoded = args.filter((a) => a !== "--json" && a !== "--explain").join(" ");
+  if (explain) return { code: 0, output: humanize(encoded) };
   const conditions = parseQuery(encoded);
   const issues = validate(encoded);
   const high = issues.some((i) => i.severity === "high");

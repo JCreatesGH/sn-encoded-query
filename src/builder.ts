@@ -1,4 +1,4 @@
-import { OPERATORS, OperatorName, UNARY, LIST_OPS } from "./operators.js";
+import { OPERATORS, OperatorName, UNARY, LIST_OPS, RANGE_OPS } from "./operators.js";
 
 interface Condition {
   field: string;
@@ -31,6 +31,11 @@ export class QueryBuilder {
     if (LIST_OPS.includes(c.op)) {
       const list = Array.isArray(c.value) ? c.value.join(",") : String(c.value);
       return `${c.field}${token}${list}`;
+    }
+    if (RANGE_OPS.includes(c.op)) {
+      // BETWEEN encodes its two ends as `low@high`
+      const [a, b] = Array.isArray(c.value) ? c.value : String(c.value ?? "").split("@");
+      return `${c.field}${token}${a ?? ""}@${b ?? ""}`;
     }
     return `${c.field}${token}${formatValue(c.value)}`;
   }

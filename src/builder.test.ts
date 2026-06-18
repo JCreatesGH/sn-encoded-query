@@ -25,6 +25,12 @@ describe("QueryBuilder", () => {
     expect(q).toBe("short_descriptionLIKEoutage^ORDERBYDESCsys_created_on");
   });
 
+  it("builds a BETWEEN range (array or low@high string)", () => {
+    expect(query().where("priority", "between", [1, 3]).build()).toBe("priorityBETWEEN1@3");
+    expect(query().where("sys_created_on", "between", "2026-01-01@2026-12-31").build())
+      .toBe("sys_created_onBETWEEN2026-01-01@2026-12-31");
+  });
+
   it("toString equals build", () => {
     const b = query().where("x", "eq", 1);
     expect(b.toString()).toBe(b.build());

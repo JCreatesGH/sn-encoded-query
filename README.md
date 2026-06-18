@@ -4,7 +4,7 @@
 [![TypeScript](https://img.shields.io/badge/types-included-blue)](https://www.typescriptlang.org/)
 [![License: MIT](https://img.shields.io/badge/license-MIT-green)](LICENSE)
 
-Build, parse, and validate ServiceNow **encoded queries** with a typed fluent API — no more hand-concatenating `active=true^priority<=2^ORDERBYDESC...` strings and hoping the operators are right.
+Build, parse, **explain**, and validate ServiceNow **encoded queries** with a typed fluent API — no more hand-concatenating `active=true^priority<=2^ORDERBYDESC...` strings and hoping the operators are right, and no more squinting at someone else's query to figure out what it *means*.
 
 ![screenshot](assets/screenshot.png)
 
@@ -22,13 +22,25 @@ import { query } from "sn-encoded-query";
 query()
   .where("active", "eq", true)
   .and("priority", "lte", 2)
+  .where("sys_created_on", "between", ["2026-01-01", "2026-12-31"])
   .or("assigned_to", "isEmpty")
   .orderByDesc("sys_created_on")
   .build();
-// "active=true^priority<=2^ORassigned_toISEMPTY^ORDERBYDESCsys_created_on"
+// "active=true^priority<=2^sys_created_onBETWEEN2026-01-01@2026-12-31^ORassigned_toISEMPTY^ORDERBYDESCsys_created_on"
 ```
 
-Operators are a typed union: `eq, ne, gt, lt, gte, lte, contains, notContains, startsWith, endsWith, in, notIn, isEmpty, isNotEmpty`. Unary and list operators are handled correctly.
+Operators are a typed union: `eq, ne, gt, lt, gte, lte, contains, notContains, startsWith, endsWith, in, notIn, between, isEmpty, isNotEmpty`. Unary, list (`IN`), and range (`BETWEEN`, encoded `low@high`) operators are handled correctly.
+
+## Explain
+
+Turn a cryptic query into a sentence — `humanize()`, or `--explain` on the CLI:
+
+```ts
+import { humanize } from "sn-encoded-query";
+
+humanize("active=true^priority<=2^ORstate=1^ORDERBYDESCsys_created_on");
+// "active is true and priority ≤ 2 or state is 1, sorted by sys_created_on (descending)"
+```
 
 ## Parse & validate
 
@@ -50,12 +62,14 @@ Installing the package adds an `sn-encoded-query` command — parse and validate
 ```bash
 $ sn-encoded-query "active=true^priority>=2^ORstate=6"
 $ sn-encoded-query "state=INPROGRESS^assigned_toISEMPTY" --json
+$ sn-encoded-query "active=true^priority<=2^ORDERBYDESCsys_created_on" --explain
+  active is true and priority ≤ 2, sorted by sys_created_on (descending)
 ```
 
 ## Development
 
 ```bash
-npm install && npm test    # 15 tests
+npm install && npm test    # 23 tests
 npm run build              # tsc, clean
 ```
 

@@ -4,6 +4,7 @@ export const OPERATORS = {
   contains: "LIKE", notContains: "NOT LIKE",
   startsWith: "STARTSWITH", endsWith: "ENDSWITH",
   in: "IN", notIn: "NOT IN",
+  between: "BETWEEN",
   isEmpty: "ISEMPTY", isNotEmpty: "ISNOTEMPTY",
 } as const;
 
@@ -13,3 +14,5 @@ export type OperatorName = keyof typeof OPERATORS;
 export const UNARY: OperatorName[] = ["isEmpty", "isNotEmpty"];
 // operators whose value is a list
 export const LIST_OPS: OperatorName[] = ["in", "notIn"];
+// operators whose value is a two-ended range, encoded `low@high`
+export const RANGE_OPS: OperatorName[] = ["between"];

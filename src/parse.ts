@@ -20,6 +20,18 @@ const UNARY_TOKENS: Array<[OperatorName, string]> = [
   ["isEmpty", OPERATORS.isEmpty],
 ];
 
+export interface OrderBy { field: string; desc: boolean; }
+
+/** Extract the ORDERBY / ORDERBYDESC clauses from an encoded query. */
+export function parseOrderBy(encoded: string): OrderBy[] {
+  const out: OrderBy[] = [];
+  for (const segment of encoded.split("^")) {
+    if (/^ORDERBYDESC/i.test(segment)) out.push({ field: segment.slice("ORDERBYDESC".length), desc: true });
+    else if (/^ORDERBY/i.test(segment)) out.push({ field: segment.slice("ORDERBY".length), desc: false });
+  }
+  return out;
+}
+
 export function parseQuery(encoded: string): ParsedCondition[] {
   const out: ParsedCondition[] = [];
   for (const segment of encoded.split("^")) {

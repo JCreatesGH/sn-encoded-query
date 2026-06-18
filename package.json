@@ -1,7 +1,7 @@
 {
   "name": "sn-encoded-query",
-  "version": "0.1.0",
-  "description": "A typed builder, parser, and validator for ServiceNow encoded queries.",
+  "version": "0.2.0",
+  "description": "A typed builder, parser, explainer, and validator for ServiceNow encoded queries.",
   "type": "module",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
