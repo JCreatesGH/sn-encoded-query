@@ -5,6 +5,7 @@ export const OPERATORS = {
   startsWith: "STARTSWITH", endsWith: "ENDSWITH",
   in: "IN", notIn: "NOT IN",
   between: "BETWEEN",
+  sameAs: "SAMEAS", notSameAs: "NSAMEAS",   // compare to another field
   isEmpty: "ISEMPTY", isNotEmpty: "ISNOTEMPTY",
 } as const;
 

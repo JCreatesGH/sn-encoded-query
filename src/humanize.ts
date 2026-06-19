@@ -8,6 +8,7 @@ const PHRASES: Record<OperatorName, string> = {
   startsWith: "starts with", endsWith: "ends with",
   in: "is one of", notIn: "is not one of",
   between: "is between",
+  sameAs: "is the same as", notSameAs: "is not the same as",
   isEmpty: "is empty", isNotEmpty: "is not empty",
 };
 
@@ -27,11 +28,13 @@ function describe(c: ParsedCondition): string {
 
 /** Render a ServiceNow encoded query as a plain-English sentence. */
 export function humanize(encoded: string): string {
-  const parts = parseQuery(encoded).map((c, i) => {
-    const prefix = i === 0 ? "" : c.join === "OR" ? "or " : "and ";
-    return prefix + describe(c);
+  let text = "";
+  parseQuery(encoded).forEach((c, i) => {
+    if (i === 0) text += describe(c);
+    else if (c.join === "NQ") text += "; or " + describe(c);   // new-query group boundary
+    else if (c.join === "OR") text += " or " + describe(c);
+    else text += " and " + describe(c);
   });
-  let text = parts.join(" ");
   const order = parseOrderBy(encoded);
   if (order.length) {
     const by = order.map((o) => `${o.field}${o.desc ? " (descending)" : ""}`).join(", ");

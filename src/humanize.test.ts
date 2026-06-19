@@ -24,6 +24,24 @@ describe("humanize", () => {
     const q = query().where("active", "eq", true).and("priority", "between", [1, 3]).build();
     expect(humanize(q)).toBe("active is true and priority is between 1 and 3");
   });
+
+  it("renders a ^NQ new-query group as a top-level OR", () => {
+    expect(humanize("active=true^priority=1^NQactive=false^priority=2"))
+      .toBe("active is true and priority is 1; or active is false and priority is 2");
+  });
+
+  it("explains SAMEAS / NSAMEAS field comparisons", () => {
+    expect(humanize("opened_bySAMEASassigned_to")).toBe("opened_by is the same as assigned_to");
+    expect(humanize("opened_byNSAMEASassigned_to")).toBe("opened_by is not the same as assigned_to");
+  });
+});
+
+describe("parseQuery ^NQ", () => {
+  it("strips the NQ prefix and marks the join", () => {
+    const conds = parseQuery("active=true^NQstate=6");
+    expect(conds[0]).toMatchObject({ field: "active", op: "eq", join: "AND" });
+    expect(conds[1]).toMatchObject({ field: "state", op: "eq", value: "6", join: "NQ" });
+  });
 });
 
 describe("parseOrderBy", () => {

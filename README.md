@@ -29,7 +29,21 @@ query()
 // "active=true^priority<=2^sys_created_onBETWEEN2026-01-01@2026-12-31^ORassigned_toISEMPTY^ORDERBYDESCsys_created_on"
 ```
 
-Operators are a typed union: `eq, ne, gt, lt, gte, lte, contains, notContains, startsWith, endsWith, in, notIn, between, isEmpty, isNotEmpty`. Unary, list (`IN`), and range (`BETWEEN`, encoded `low@high`) operators are handled correctly.
+Operators are a typed union: `eq, ne, gt, lt, gte, lte, contains, notContains, startsWith, endsWith, in, notIn, between, sameAs, notSameAs, isEmpty, isNotEmpty`. Unary, list (`IN`), range (`BETWEEN`, encoded `low@high`), and field-to-field (`SAMEAS`/`NSAMEAS`) operators are handled correctly.
+
+### `^NQ` new-query groups
+
+ServiceNow ORs whole condition groups with `^NQ` ("new query"). `newQuery()` starts one, and it
+round-trips through parse, validate, and explain:
+
+```ts
+query()
+  .where("active", "eq", true).and("priority", "eq", 1)
+  .newQuery("active", "eq", false).and("priority", "eq", 2)
+  .build();
+// "active=true^priority=1^NQactive=false^priority=2"
+// → "active is true and priority is 1; or active is false and priority is 2"
+```
 
 ## Explain
 
@@ -53,7 +67,7 @@ validate("active=true^bogus_field=1", new Set(["active", "priority"]));
 // [{ severity: "high", rule: "unknown-field", message: "Field 'bogus_field' is not in the table schema." }]
 ```
 
-The validator catches unknown fields (when given a schema), unparseable operators, and empty `field=` values that should be `isEmpty` checks. The parser binds each condition to the **earliest** operator, so a value that contains operator text (e.g. `state=INPROGRESS`, `descriptionLIKEa=b`) parses correctly instead of splitting on the `IN`/`=` inside the value.
+The validator catches unknown fields (when given a schema), unparseable operators, and empty `field=` values that should be `isEmpty` checks. It now also understands `^NQ` groups, so the field after a new-query separator is validated against the schema correctly (rather than mis-read as `NQ<field>`). The parser binds each condition to the **earliest** operator, so a value that contains operator text (e.g. `state=INPROGRESS`, `descriptionLIKEa=b`) parses correctly instead of splitting on the `IN`/`=` inside the value.
 
 ## CLI
 
@@ -69,7 +83,7 @@ $ sn-encoded-query "active=true^priority<=2^ORDERBYDESCsys_created_on" --explain
 ## Development
 
 ```bash
-npm install && npm test    # 23 tests
+npm install && npm test    # 29 tests
 npm run build              # tsc, clean
 ```
 

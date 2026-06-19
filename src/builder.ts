@@ -4,7 +4,7 @@ interface Condition {
   field: string;
   op: OperatorName;
   value?: string | number | boolean | Array<string | number>;
-  join: "AND" | "OR";
+  join: "AND" | "OR" | "NQ";
 }
 
 export class QueryBuilder {
@@ -20,6 +20,11 @@ export class QueryBuilder {
   }
   or(field: string, op: OperatorName, value?: any): this {
     this.conditions.push({ field, op, value, join: "OR" });
+    return this;
+  }
+  /** Start a new ServiceNow "new query" (`^NQ`) group — an OR across whole groups. */
+  newQuery(field: string, op: OperatorName, value?: any): this {
+    this.conditions.push({ field, op, value, join: "NQ" });
     return this;
   }
   orderBy(field: string): this { this.orderBys.push("ORDERBY" + field); return this; }
@@ -46,6 +51,7 @@ export class QueryBuilder {
       const enc = this.encodeCondition(c);
       if (i === 0) parts.push(enc);
       else if (c.join === "OR") parts.push("^OR" + enc);
+      else if (c.join === "NQ") parts.push("^NQ" + enc);
       else parts.push("^" + enc);
     });
     for (const o of this.orderBys) parts.push("^" + o);

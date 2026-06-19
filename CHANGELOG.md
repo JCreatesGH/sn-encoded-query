@@ -3,6 +3,19 @@
 All notable changes are documented here, following
 [Keep a Changelog](https://keepachangelog.com/) and [SemVer](https://semver.org/).
 
+## [0.3.0]
+
+### Added
+- **`^NQ` "new query" groups** — ServiceNow's OR-between-whole-groups separator is now a
+  first-class join across the builder (`newQuery()`), parser (`join: "NQ"`), validator, and
+  explainer (`"…; or …"`). Previously a `^NQ` segment mis-parsed as a field named `NQ<field>`.
+- **`sameAs` / `notSameAs`** operators (`SAMEAS` / `NSAMEAS`) for field-to-field comparison,
+  with plain-English phrasing.
+
+### Fixed
+- `validate()` now checks the real field after an `^NQ` separator against the schema instead
+  of reporting a false `unknown-field` for `NQ<field>`.
+
 ## [0.2.0]
 
 ### Added

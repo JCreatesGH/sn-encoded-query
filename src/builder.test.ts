@@ -35,4 +35,19 @@ describe("QueryBuilder", () => {
     const b = query().where("x", "eq", 1);
     expect(b.toString()).toBe(b.build());
   });
+
+  it("builds a ^NQ new-query group", () => {
+    const q = query()
+      .where("active", "eq", true).and("priority", "eq", 1)
+      .newQuery("active", "eq", false).and("priority", "eq", 2)
+      .build();
+    expect(q).toBe("active=true^priority=1^NQactive=false^priority=2");
+  });
+
+  it("builds SAMEAS / NSAMEAS field comparisons", () => {
+    expect(query().where("opened_by", "sameAs", "assigned_to").build())
+      .toBe("opened_bySAMEASassigned_to");
+    expect(query().where("opened_by", "notSameAs", "assigned_to").build())
+      .toBe("opened_byNSAMEASassigned_to");
+  });
 });

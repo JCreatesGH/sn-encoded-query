@@ -5,7 +5,7 @@ export interface ParsedCondition {
   op: OperatorName | "unknown";
   token: string;
   value: string;
-  join: "AND" | "OR";
+  join: "AND" | "OR" | "NQ";    // NQ = ServiceNow "new query" — OR between whole groups
 }
 
 // Binary operators (those with a value); matched by *position*, not just length,
@@ -37,9 +37,11 @@ export function parseQuery(encoded: string): ParsedCondition[] {
   for (const segment of encoded.split("^")) {
     if (!segment) continue;
     if (/^ORDERBY/i.test(segment)) continue;
-    let join: "AND" | "OR" = "AND";
+    let join: "AND" | "OR" | "NQ" = "AND";
     let seg = segment;
-    if (seg.startsWith("OR")) { join = "OR"; seg = seg.slice(2); }
+    // `NQ` (new query) starts a fresh OR-group; `OR` ORs within the current group.
+    if (seg.startsWith("NQ")) { join = "NQ"; seg = seg.slice(2); }
+    else if (seg.startsWith("OR")) { join = "OR"; seg = seg.slice(2); }
 
     // value-less suffix operators (field + ISEMPTY / ISNOTEMPTY)
     const unary = UNARY_TOKENS.find(([, t]) => seg.endsWith(t) && seg.length > t.length);

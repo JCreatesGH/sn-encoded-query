@@ -68,4 +68,10 @@ describe("validate", () => {
   it("flags empty query", () => {
     expect(validate("").some((i) => i.rule === "empty")).toBe(true);
   });
+
+  it("validates the real field after an ^NQ prefix (not 'NQstate')", () => {
+    // before NQ support, the second group's field parsed as 'NQstate' -> false unknown-field
+    expect(validate("active=true^NQstate=6", fields)).toEqual([]);
+    expect(validate("active=true^NQbogus=6", fields).some((i) => i.rule === "unknown-field")).toBe(true);
+  });
 });
